@@ -105,6 +105,11 @@ void serialEvent (Serial myPort) {
     inByte = float(inString);
     //println(inByte);
     inByte = map(inByte, 0, 60, 0, height);
+    
+    // Activate the laser
+    int i = int(inString);
+    boolean inBounds = (i >= 0) && (i < lasers.size());
+    if(inBounds) lasers.get(int(inString)).hit();
   }
 
   // TODO: Create morse code out of the pin number

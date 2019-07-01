@@ -12,7 +12,7 @@ int pause_length = 0;
 
 /* Duration of dots and dashes, using common morse practices */
 
-final int dot = 110;
+final int dot = 100;
 final int pause = dot;
 final int dash = dot * 3;
 final int separator_length = dot * 7;
