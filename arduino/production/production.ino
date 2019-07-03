@@ -1,4 +1,4 @@
-int mode = 0 // 0 for production, 1 for analog read, 2 for digital read
+int mode = 3; // 0 for production, 1 for analog read, 2 for digital read, 3 for mass analog read
 
 // A beam structure. pin is the assigned pin, hit wether the pin is hit by a laser or not.
 typedef struct {
@@ -66,7 +66,7 @@ void loop() {
     sensorValue = digitalRead(3);
   }
   else if (mode == 0) {
-  }
+
     // Loop through our sensor array
     int i = 0;
     for (i = 0; i < ARRAYSIZE(sensors); i++) {
@@ -95,6 +95,14 @@ void loop() {
       }
     }
   }
-  delay(100);
+  else if (mode == 3) {
+    // Loop through our sensor array
+
+    //String value = String(analogRead(0)) + "," + String(analogRead(1)) + "," + String(analogRead(2)) + "," + String(analogRead(3)) + "," + String(analogRead(4)) + "," + String(analogRead(5)) + "," + String(analogRead(6)) + "," + String(analogRead(7)) + "," + String(analogRead(8)) + "," + String(analogRead(9)) + "," + String(analogRead(10)) + "," + String(analogRead(11)) + "," + String(analogRead(12)) + "," + String(analogRead(13)) + "," + String(analogRead(14)) + "," + String(analogRead(15));
+    String value2 = String(analogRead(0)) + "," + String(analogRead(1)) + "," + String(analogRead(2)) + "," + String(analogRead(3)) + "," + String(analogRead(4)) + "," + String(analogRead(5)) + "," + String(analogRead(6)) + "," + String(analogRead(7)) + "," + String(analogRead(8)) + "," + String(analogRead(9)) + "," + String(analogRead(10)) + "," + String(analogRead(11)) + "," + String(analogRead(12)) + "," + String(analogRead(13)) + "," + String(analogRead(14)) + "," + String(analogRead(15));
+    Serial.println(value2);
+
+  }
+  delay(50);
 
 }
