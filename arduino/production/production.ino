@@ -1,4 +1,6 @@
-int mode = 3; // 0 for production, 1 for analog read, 2 for digital read, 3 for mass analog read
+int mode = 0; // 0 for production, 1 for analog read, 2 for digital read, 3 for mass analog read
+
+int analog_threshold = 200; // analog reading. Sensors with readings higher than this are considered "hit" by a laser.
 
 // A beam structure. pin is the assigned pin, hit wether the pin is hit by a laser or not.
 typedef struct {
@@ -12,7 +14,8 @@ typedef struct {
 // The pins we can use to check for lasers
 // Taking 20 and 21 out for now because they're the SDA and SCL pins and I haven't found out how to tame them yet.
 // Taking out 13 as well because it's the LED pin and it appears to always be HIGH except when programatically set to LOW...
-int sensorPins[] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12,/*13,*/14, 15, 16, 17, 18, 19,/*20,21,*/22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53};
+// Adding in 54, 55 and 56. They're analog pins and they're used for weak lasers.
+int sensorPins[] = {3, 4, 5, 6, 7, 8, 9, 10, 11, 12,/*13,*/14, 15, 16, 17, 18, 19,/*20,21,*/22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56};
 
 // A construct of pin value pairs.
 beam sensors[ ARRAYSIZE(sensorPins)];
@@ -57,13 +60,13 @@ void setup() {
 
 
 void loop() {
-
   if (mode == 1) {
     sensorValue = analogRead(A3);
     Serial.println(sensorValue);
 
   } else if (mode == 2) {
     sensorValue = digitalRead(3);
+    Serial.println(sensorValue);
   }
   else if (mode == 0) {
 
@@ -74,8 +77,16 @@ void loop() {
       // Store the previous hit value of the sensor
       previousValue = sensors[i].hit;
 
-      // Read the current value of the pin. 1 means hit, 0 means not hit by laser.
-      sensorValue = digitalRead(sensors[i].pin);
+      // If the pin is an analog pin, do an analog read, process from there.
+      if (sensors[i].pin >= 54) {
+        sensorValue = analogRead(sensors[i].pin);
+        if (sensorValue > analog_threshold) sensorValue = 1;
+        else  sensorValue = 0;
+      }
+      else {
+        // Read the current value of the pin. 1 means hit, 0 means not hit by laser.
+        sensorValue = digitalRead(sensors[i].pin);
+      }
 
       // Store the current value of the pin in the hit property.
       sensors[i].hit = sensorValue;

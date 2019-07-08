@@ -51,7 +51,7 @@ void mousePressed() {
      serialized += int(mouseX/scaleFactor) + ", " + int(mouseY/scaleFactor) + "));";
      start = true;
      pin++;
-     println(serialized);
+     //println(serialized);
   }
   //println((mouseX/scaleFactor) + " " + (mouseY/scaleFactor));
 }

@@ -12,14 +12,29 @@ int pause_length = 0;
 
 /* Duration of dots and dashes, using common morse practices */
 
-final int dot = 100;
-final int pause = dot;
-final int dash = dot * 3;
-final int separator_length = dot * 7;
+final int dot_standard = 110;
+int dot = dot_standard;
+int pause = dot;
+int dash = dot * 3;
+int separator_length = dot * 7;
 
 /* Special characters: character separator and word separator */
 final char char_separator = ' ';
 final char word_separator = '/';
+
+// Let morse code run faster if the queue is longer, slower if the queue is near empty
+void calculateSignalTimes() {
+  //character_queue.length
+  
+  // Min 60ms
+  // Normal 120ms
+  dot = constrain(dot_standard - character_queue.length, 60, dot_standard);
+  println("dot length: ", dot);
+  
+  pause = dot;
+  dash = dot * 3;
+  separator_length = dot * 7;
+}
 
 /* Hashmap of numbers 0-9 */
 HashMap<Character, String> code = new HashMap<Character, String>();
@@ -78,7 +93,7 @@ void enqueueMorseCode(String number) {
 void morsePlayback() {
   println("watching morse queue...");
   while (true) {
-
+    
     // If there are no characters in the queue, abort and try again later.
     while (character_queue.length == 0) {
       //println("character queue length zero");
@@ -103,6 +118,9 @@ void morsePlayback() {
     case '/':
       signal_length = 0;
       pause_length = separator_length;
+      
+      // At the end of each word, calculate the signal time for the next word
+      calculateSignalTimes();
       break;
     }
 

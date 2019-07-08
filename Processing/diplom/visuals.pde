@@ -6,16 +6,28 @@ color c;
 
 /* Data blob variables */
 float _viscosity = .8; // viscosity
-int _blob_distance = 60; // distance variable for the data blob. Bigger numbers = further apart
-int circles_per_interruption = 10; // How many circles an interruption spawns
-float blob_distance_increase_per_interruption = 1.5;
+int _blob_distance = 25; // distance variable for the data blob. Bigger numbers = further apart
+float mass_modifier = 0.55; // Quick way to modify data circle size
+
+int min_circles_per_interruption = 5; // How many circles are spawned baseline 
+int circles_per_interruption = 5; // How many circles intensity can add per interruption
+float blob_distance_increase_per_interruption = 1.4;
+
+/* Laser variables */
+float opacity_increase_per_frame = 0.12;
+float max_position_jitter = 2.5;
+float position_jitter_threshold = 0.4;
+
+final int A1 = 55;
+final int A0 = 54;
+final int A2 = 56;
 
 final int data_spawn_variance = 7;
 
 // Width of the room in cm
-int roomWidth = 620;
-int roomHeight = 400;
-
+int roomWidth = 687;
+int roomHeight = 250;
+int roomThickness = 10;
 Room room = new Room();
 DataBlob blob = new DataBlob();
 
@@ -28,23 +40,30 @@ ArrayList<Laser> lasers = new ArrayList<Laser>();
 
 void initializeLasers() {
 
-  lasers.add ( new Laser(0, 10, 5, 155, 192));
-lasers.add ( new Laser(1, 234, 4, 191, 196));
-lasers.add ( new Laser(2, 237, 4, 341, 195));
-lasers.add ( new Laser(3, 436, 194, 308, 5));
-lasers.add ( new Laser(4, 439, 193, 483, 4));
-lasers.add ( new Laser(5, 525, 4, 623, 151));
-lasers.add ( new Laser(6, 625, 66, 452, 193));
-lasers.add ( new Laser(7, 463, 214, 625, 250));
-lasers.add ( new Laser(8, 624, 262, 561, 403));
-lasers.add ( new Laser(9, 609, 403, 440, 207));
-lasers.add ( new Laser(10, 366, 213, 498, 401));
-lasers.add ( new Laser(11, 405, 209, 307, 405));
-lasers.add ( new Laser(12, 366, 403, 308, 211));
-lasers.add ( new Laser(13, 241, 211, 248, 405));
-lasers.add ( new Laser(14, 215, 404, 20, 211));
-lasers.add ( new Laser(15, 181, 210, 9, 321));
-lasers.add ( new Laser(16, 8, 403, 149, 404));
+  lasers.add ( new Laser(33, 88, 95));
+  lasers.add ( new Laser(A1, 170, 150));
+  lasers.add ( new Laser(3, 223, 108));
+  lasers.add ( new Laser(22, 208, 198));
+  lasers.add ( new Laser(31, 45, 202));
+  lasers.add ( new Laser(4, roomWidth-202, 242));
+  lasers.add ( new Laser(24, 98, 208));
+  lasers.add ( new Laser(25, 263, 238));
+  lasers.add ( new Laser(A2, 290, 305));
+  lasers.add ( new Laser(A0, 356, 310));
+  lasers.add ( new Laser(23, 322, 315));
+  lasers.add ( new Laser(26, roomWidth-154, 300));
+  lasers.add ( new Laser(28, roomWidth-214, 303));
+  lasers.add ( new Laser(30, 238, 295));
+  lasers.add ( new Laser(29, roomWidth-74, 380));
+  lasers.add ( new Laser(27, 374, 375));
+  lasers.add ( new Laser(5, 176, 410));
+  lasers.add ( new Laser(6, 338, 405));
+  lasers.add ( new Laser(7, roomWidth, roomHeight-150, 460, roomHeight));
+  lasers.add ( new Laser(8, roomWidth-214, 457));
+  lasers.add ( new Laser(9, roomWidth-39, 465));
+  lasers.add ( new Laser(10, roomWidth, roomHeight-213, 494, roomHeight));
+  lasers.add ( new Laser(11, roomWidth-34, 510));
+  lasers.add ( new Laser(12, roomWidth-156, 0, roomWidth, roomHeight-24));
 }
 
 
@@ -55,9 +74,19 @@ class Laser {
   int pin = 0;
   boolean active = false;
   PVector middle = new PVector(0, 0);
+  float opacity = 1.0;
+  float max_offset = 0.0;
 
   Laser() {
     active = false;
+  }
+
+  Laser(int _pin, int x_start, int x_finish) {
+    pin = _pin;
+    start = new PVector(x_start, 0);
+    end = new PVector(x_finish, roomHeight);
+    active = true;
+    middle = PVector.sub(end, start).mult(0.5).add(start);
   }
 
   Laser(int _pin, int x, int y, int endx, int endy) {
@@ -84,16 +113,24 @@ class Laser {
     if (!active) return;
 
     // Factor in intensity for jitter
+    if (intensity > position_jitter_threshold)
+      max_offset = max_position_jitter * (intensity - position_jitter_threshold);
+    else
+      max_offset = 0.0;
+
 
     // Factor in intensity for opacity
 
     // Factor in recent hits for opacity
-
-
-    fill(#ff0000);
+    fill(255, 0, 0, 255 * opacity);
     strokeWeight(.7);
-    stroke(#ff0000);
-    line(start.x, start.y, end.x, end.y);
+    stroke(255, 0, 0, 255 * opacity);
+
+    line(start.x + random(-max_offset, max_offset), start.y + random(-max_offset, max_offset), end.x + random(-max_offset, max_offset), end.y + random(-max_offset, max_offset));
+
+    // Increase opacity again, up to 1
+
+    opacity = constrain(opacity + 1.0 * opacity_increase_per_frame*opacity_increase_per_frame, 0, 1);
   }
 
   // Controls what happens when the laser gets interrupted
@@ -102,6 +139,10 @@ class Laser {
     this.createDataCircles();
 
     // TODO: Turn laser off, fade in again
+    opacity = 0.0;
+
+    // Increase intensity
+    increaseIntensity();
 
     // Set target
     blob.setTarget(int(middle.x), int(middle.y));
@@ -116,7 +157,7 @@ class Laser {
   void createDataCircles() {
 
     // Draw circles along the laser
-    for (int i=0; i < circles_per_interruption; i++) {
+    for (int i=0; i < int(circles_per_interruption * intensity) + min_circles_per_interruption; i++) {
       PVector along = PVector.sub(end, start);
       along.mult(random(0, 1));
       along.add(start);
@@ -127,7 +168,11 @@ class Laser {
 
       // TODO: Factor in intensity for color?
 
-      blob.particles.add(new Particle(along.x, along.y, c, random(0.003, 0.03)));
+      // 0 --> 0.003
+      // 1 --> 0.03
+      
+      // 0.003 + intensity * 0.027 
+      blob.particles.add(new Particle(along.x, along.y, c, (0.012 + intensity * 0.027 + random(0.003 * intensity )) * mass_modifier));
     }
   }
 }
@@ -137,32 +182,40 @@ class Room {
   void drawDoors() {
     // Doors
     fill(#000000);
-    rect(10, -5, 120, 12);
-    rect(10, roomHeight-5, 120, 12);
+    //rect(10, -5, 120, 12);
+    //rect(10, roomHeight-5, 120, 12);
   }
   void draw() {
+
+    pushMatrix();
+    translate(roomThickness, roomThickness);
 
     fill(#000000);
 
     // Walls
     noFill();
     stroke(#333333);
-    strokeWeight(10);
-    //rect(0, 0, roomWidth, roomHeight);
-    
-    rect(0,0, 5, roomHeight);
-    rect(roomWidth - 5, 0, 5, roomHeight -5);
-    
-    // Leave space for doors
-    rect(120,0, roomWidth, 5);
-    rect(120,roomHeight -5, roomWidth, 5);
-
-    // Elements
     fill(#333333);
+    strokeWeight(10);
     noStroke();
-    rect(0, roomHeight/2 - 15, roomWidth*3/4, 30);
+    //rect(0, 0, roomWidth, roomHeight);
 
-    
+    // Upper Wall
+    rect(-roomThickness, -roomThickness, roomWidth, roomThickness);
+
+    // Lower Wall, save the door
+    rect(-roomThickness, roomHeight, roomWidth - 100, roomThickness);
+
+    // Left Wall, save the door
+    rect(-roomThickness, -roomThickness, roomThickness, 63);
+    rect(-roomThickness, 125+63, roomThickness, 63);
+
+    // Right Wall
+    rect(roomWidth - roomThickness, -roomThickness, roomThickness, roomHeight + roomThickness * 2);
+
+    //rect(0,0, roomWidth, 0);
+    //rect(0,roomHeight, roomWidth, roomHeight);
+    popMatrix();
   }
 }
 
@@ -189,7 +242,7 @@ class DataBlob {
           float dis = sqrt(x*x+y*y);
           if (dis < 0.01) dis = 0.01;
 
-          float force = (dis-(blob_distance + times_activated * blob_distance_increase_per_interruption))*particles.get(j).mass/dis;
+          float force = (dis-(blob_distance + times_activated * blob_distance_increase_per_interruption))*particles.get(j).mass/dis * (1/mass_modifier);
           accX += force * x;
           accY += force * y;
           /*
@@ -242,6 +295,7 @@ class Particle {
   float xVel = 0;
   float yVel = 0;
   color col = color(235, 128, 64);
+  float max_offset = 0.0;
 
   // TODO: Make dependant on intensity and maybe number of times this laser was triggered already
   float mass = random(0.003, 0.03);
@@ -259,18 +313,31 @@ class Particle {
   }
 
   void draw() {
+    
+    if (intensity > position_jitter_threshold)
+      max_offset = max_position_jitter * (intensity - position_jitter_threshold) / 2;
+    else
+      max_offset = 0.0;
+      
     fill(col);
     fill(#ffffff);
     noStroke();
-    ellipse(xPos, yPos, mass*300, mass*300);
+    ellipse(xPos  + random(-max_offset, max_offset), yPos + random(-max_offset, max_offset), mass*300, mass*300);
   }
 }
 
 
 void drawLasers() {
+  pushMatrix();
+  translate(0, roomThickness);
   for (int i = 0; i < lasers.size(); i++) {
     if (!lasers.get(i).active()) continue;
 
     lasers.get(i).draw();
   }
+  popMatrix();
+}
+
+void debugDraw() {
+  text(intensity, 10, 10);
 }
