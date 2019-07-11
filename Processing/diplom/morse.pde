@@ -12,7 +12,7 @@ int pause_length = 0;
 
 /* Duration of dots and dashes, using common morse practices */
 
-final int dot_standard = 110;
+final int dot_standard = 100;
 int dot = dot_standard;
 int pause = dot;
 int dash = dot * 3;
@@ -24,12 +24,12 @@ final char word_separator = '/';
 
 // Let morse code run faster if the queue is longer, slower if the queue is near empty
 void calculateSignalTimes() {
-  //character_queue.length
+  //println(character_queue.length);
   
   // Min 60ms
   // Normal 120ms
-  dot = constrain(dot_standard - character_queue.length, 60, dot_standard);
-  println("dot length: ", dot);
+  dot = constrain(dot_standard - character_queue.length, dot_standard/2, dot_standard);
+  //println("dot length: ", dot);
   
   pause = dot;
   dash = dot * 3;

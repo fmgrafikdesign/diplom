@@ -21,6 +21,10 @@ void keyPressed() {
     blob.particles.clear();
   }
   
+  if(key == 's') {
+     potentialSoundEffect(); 
+  }
+  
   if(key == ' ') {
      //blob.setTarget(mouseX, mouseY);
      

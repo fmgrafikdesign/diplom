@@ -126,10 +126,26 @@ class Laser {
     strokeWeight(.7);
     stroke(255, 0, 0, 255 * opacity);
 
-    line(start.x + random(-max_offset, max_offset), start.y + random(-max_offset, max_offset), end.x + random(-max_offset, max_offset), end.y + random(-max_offset, max_offset));
-
+    float offset_start_x = random(-max_offset, max_offset);
+    float offset_start_y = random(-max_offset, max_offset);
+    float offset_end_x = random(-max_offset, max_offset);
+    float offset_end_y = random(-max_offset, max_offset);
+    //line(start.x + offset_start_x, start.y + offset_start_y, end.x + offset_end_x, end.y + offset_end_y);
+    
+    // Glow
+    int glow_radius = 4;
+    // Lower value = less falloff
+    float glow_falloff = 1.6;
+    
+    for(int i = 1; i <= glow_radius; i++) {
+       strokeWeight(i);
+       // opacity is .7 at 0 intensity and 1 at <.4 intensity
+       
+       stroke(255, 0, 0, 255 * opacity * (1.0/(pow(i, glow_falloff))));
+       line(start.x + offset_start_x, start.y + offset_start_y, end.x + offset_end_x, end.y + offset_end_y); 
+    }
+    
     // Increase opacity again, up to 1
-
     opacity = constrain(opacity + 1.0 * opacity_increase_per_frame*opacity_increase_per_frame, 0, 1);
   }
 
@@ -138,11 +154,14 @@ class Laser {
     this.hitParticles();
     this.createDataCircles();
 
-    // TODO: Turn laser off, fade in again
+    // Turn laser off
     opacity = 0.0;
 
     // Increase intensity
     increaseIntensity();
+    
+    // Process current state, maybe play sound effect
+    potentialSoundEffect();
 
     // Set target
     blob.setTarget(int(middle.x), int(middle.y));

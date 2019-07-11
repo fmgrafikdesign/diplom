@@ -1,3 +1,5 @@
+#include <HX711.h>
+
 int mode = 0; // 0 for production, 1 for analog read, 2 for digital read, 3 for mass analog read
 
 int analog_threshold = 200; // analog reading. Sensors with readings higher than this are considered "hit" by a laser.

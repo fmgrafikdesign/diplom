@@ -2,9 +2,10 @@ import processing.sound.*;
 import processing.serial.*;
 
 // Set to 1 if it's showtime.
-int production = 0;
+int production = 1;
 
-float scaleFactor = 1.4;
+float scaleFactor = 2.7;
+float scaleFactorProduction = 3.6;
 
 Serial myPort;        // The serial port
 int xPos = 1;         // horizontal position of the graph
@@ -37,18 +38,19 @@ boolean drawIntensity = false;
 
 public void settings() {
   if (production == 0) {
-    scaleFactor = 2;
-    //    size(int(1440 * scaleFactor), int(810 *scaleFactor));
+    scaleFactor = scaleFactor;
+    //size(int(1440 * scaleFactor), int(810 *scaleFactor));
     size(1920, 1080);
   } else {
-    fullScreen();
-    scaleFactor = 4/3;
+    size(2560, 1080);
+    //fullScreen();
+    scaleFactor = scaleFactorProduction;
   }
 }
 
 void setup () {
   //size(1920, 1080);
-  println(decreasePerFrame);
+  //println(decreasePerFrame);
 
   setupMorseChars();
   frameRate(frameRate);
@@ -57,7 +59,7 @@ void setup () {
   println(Serial.list());
 
   // Open whatever port is the one you're using. 1 on my desktop pc, will need to check for Raspberry Pi
-  myPort = new Serial(this, Serial.list()[1], 19200);
+  myPort = new Serial(this, Serial.list()[0], 19200);
 
   // don't generate a serialEvent() unless you get a newline character:
   myPort.bufferUntil('\n');
@@ -71,6 +73,8 @@ void setup () {
   // Initialize the audio tracks
   initializeTracks();
 
+  // Initialize audio effects
+  initializeEffects();
 
   // Set up the morse playback thread
   thread("morsePlayback");
@@ -86,7 +90,8 @@ void draw () {
   background(#000000);
   pushMatrix();
   scale(scaleFactor);
-  translate(5, 5);
+  if(production == 0) translate(5, 5);
+  else translate(7, 14);
 
 
 
@@ -115,6 +120,9 @@ void draw () {
   // Decrease intensity every loop
   decreaseIntensity();
   //println(intensity);
+  
+  // Increase counter variables
+  frames_since_last_effect++;
   
   if(debugDraw) debugDraw();
 }
